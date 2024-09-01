@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -17,12 +18,14 @@ type ServerOption func(*Server)
 
 func WithPort(port string) ServerOption {
 	return func(s *Server) {
+		log.Debug().Msgf("Configuring port to %s", port)
 		s.port = port
 	}
 }
 
 func WithBind(bind string) ServerOption {
 	return func(s *Server) {
+		log.Debug().Msgf("Configuring bind to %s", bind)
 		s.bind = bind
 	}
 }
@@ -43,21 +46,20 @@ func NewServer(opts ...ServerOption) *Server {
 }
 
 func (s *Server) Run() {
-	fmt.Println("Listening on " + s.listenAddr)
+	log.Debug().Msgf("Starting server on %s", s.listenAddr)
 
 	// Create a new server
 	l, err := net.Listen("tcp", s.listenAddr)
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal().Msg(err.Error())
 	}
 
 	// Listen for connections
 	conn, err := l.Accept()
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal().Msg(err.Error())
 		return
 	}
 
@@ -72,9 +74,10 @@ func (s *Server) Run() {
 			if err == io.EOF {
 				break
 			}
-			fmt.Println("error reading from client: ", err.Error())
+			log.Debug().Msgf("error reading from client: %s", err.Error())
 			os.Exit(1)
 		}
+		log.Debug().Msgf("message from client: %s", string(buf))
 
 		// ignore request and send back a PONG
 		conn.Write([]byte("+OK\r\n"))

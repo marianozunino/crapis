@@ -25,11 +25,13 @@ import (
 	"os"
 
 	"github.com/marianozunino/crapis/internal"
+	"github.com/marianozunino/crapis/internal/logger"
 	"github.com/spf13/cobra"
 )
 
 var port string
 var bind string
+var debug bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,6 +39,7 @@ var rootCmd = &cobra.Command{
 	Short: "Spawns a redis like server",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger.ConfigureLogger(debug)
 		internal.NewServer(
 			internal.WithPort(port),
 			internal.WithBind(bind),
@@ -54,4 +57,5 @@ func Execute() {
 func init() {
 	rootCmd.Flags().StringVarP(&port, "port", "p", "6379", "Port to listen on")
 	rootCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
+	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 }
