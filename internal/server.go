@@ -3,7 +3,6 @@ package internal
 import (
 	"io"
 	"net"
-	"os"
 
 	"github.com/rs/zerolog/log"
 )
@@ -47,39 +46,39 @@ func NewServer(opts ...ServerOption) *Server {
 
 func (s *Server) Run() {
 	log.Debug().Msgf("Starting server on %s", s.listenAddr)
-
-	// Create a new server
 	l, err := net.Listen("tcp", s.listenAddr)
-
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+	defer l.Close()
 
-	// Listen for connections
-	conn, err := l.Accept()
-
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-		return
-	}
-
-	defer conn.Close()
+	// Update the listenAddr with the actual port if it was 0
+	s.listenAddr = l.Addr().String()
+	log.Debug().Msgf("Server is listening on %s", s.listenAddr)
 
 	for {
-		buf := make([]byte, 1024)
+		conn, err := l.Accept()
+		if err != nil {
+			log.Error().Msgf("Error accepting connection: %v", err)
+			continue
+		}
+		go s.handleConnection(conn)
+	}
+}
 
-		// read message from client
-		_, err = conn.Read(buf)
+func (s *Server) handleConnection(conn net.Conn) {
+	defer conn.Close()
+	for {
+		buf := make([]byte, 1024)
+		_, err := conn.Read(buf)
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-			log.Debug().Msgf("error reading from client: %s", err.Error())
-			os.Exit(1)
+			log.Debug().Msgf("Error reading from client: %s", err.Error())
+			return
 		}
-		log.Debug().Msgf("message from client: %s", string(buf))
-
-		// ignore request and send back a PONG
+		log.Debug().Msgf("Message from client: %s", string(buf))
 		conn.Write([]byte("+OK\r\n"))
 	}
 }
