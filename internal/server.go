@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"io"
 	"net"
 
+	"github.com/marianozunino/crapis/internal/resp"
 	"github.com/rs/zerolog/log"
 )
 
@@ -69,16 +69,17 @@ func (s *Server) Run() {
 func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 	for {
-		buf := make([]byte, 1024)
-		_, err := conn.Read(buf)
+
+		resp := resp.NewResp(conn)
+
+		value, err := resp.Read()
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
 			log.Debug().Msgf("Error reading from client: %s", err.Error())
 			return
 		}
-		log.Debug().Msgf("Message from client: %s", string(buf))
+
+		log.Debug().Msgf("Value: %+v", value)
+
 		conn.Write([]byte("+OK\r\n"))
 	}
 }

@@ -81,10 +81,9 @@ func TestServerRun(t *testing.T) {
 	}{
 		{
 			name:     "PING command",
-			input:    "PING\r\n",
+			input:    "*1\r\n$4\r\nPING\r\n",
 			expected: "+OK\r\n",
 		},
-		// Add more test cases here if needed
 	}
 
 	for _, tt := range tests {
