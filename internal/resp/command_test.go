@@ -203,7 +203,7 @@ func Test_del(t *testing.T) {
 			args: args{args: []Value{
 				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
 			}},
-			want: Value{kind: STRING, strVal: "0"},
+			want: Value{kind: INTEGER, strVal: "0"},
 		},
 		{
 			name: "Multiple Keys",
@@ -211,7 +211,7 @@ func Test_del(t *testing.T) {
 				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
 				Value{kind: BULK, bulkVal: stringPtr("del_key2")},
 			}},
-			want: Value{kind: STRING, strVal: "0"},
+			want: Value{kind: INTEGER, strVal: "0"},
 		},
 	}
 	for _, tt := range tests {

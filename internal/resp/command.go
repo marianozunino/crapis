@@ -144,7 +144,7 @@ func del(args []Value) Value {
 	}
 	deletedKeys := store.DeleteKey(keys...)
 	return Value{
-		kind:   STRING,
+		kind:   INTEGER,
 		strVal: strconv.Itoa(deletedKeys),
 	}
 }
