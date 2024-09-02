@@ -82,7 +82,7 @@ func TestServerRun(t *testing.T) {
 		{
 			name:     "PING command",
 			input:    "*1\r\n$4\r\nPING\r\n",
-			expected: "+OK\r\n",
+			expected: "+PONG\r\n",
 		},
 	}
 

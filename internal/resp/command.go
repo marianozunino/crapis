@@ -1,6 +1,8 @@
 package resp
 
 import (
+	"strconv"
+
 	"github.com/marianozunino/crapis/internal/resp/command"
 	"github.com/rs/zerolog/log"
 )
@@ -15,8 +17,9 @@ var store = newStore()
 func init() {
 	Handlers = make(map[command.CommandType]handlerFunc)
 	Handlers[command.PING] = ping
-	Handlers[command.SET] = set
 	Handlers[command.GET] = get
+	Handlers[command.SET] = set
+	Handlers[command.SETEX] = setex
 }
 
 func ping(args []Value) Value {
@@ -37,27 +40,6 @@ func ping(args []Value) Value {
 	return Value{
 		kind:   STRING,
 		strVal: "PONG",
-	}
-}
-
-func set(args []Value) Value {
-	if len(args) != 2 {
-		return Value{
-			kind:   ERROR,
-			strVal: "wrong number of arguments for 'set' command",
-		}
-	}
-
-	key := args[0].bulkVal
-	val := args[1].bulkVal
-
-	log.Debug().Msgf("set command [%s] = %s", *key, *val)
-
-	store.StoreValue(*key, *val)
-
-	return Value{
-		kind:   STRING,
-		strVal: "OK",
 	}
 }
 
@@ -87,4 +69,63 @@ func get(args []Value) Value {
 		strVal: *val,
 	}
 
+}
+
+func set(args []Value) Value {
+	if len(args) != 2 {
+		return Value{
+			kind:   ERROR,
+			strVal: "wrong number of arguments for 'set' command",
+		}
+	}
+
+	key := args[0].bulkVal
+	val := args[1].bulkVal
+
+	log.Debug().Msgf("set command [%s] = %s", *key, *val)
+
+	store.StoreValue(*key, *val)
+
+	return Value{
+		kind:   STRING,
+		strVal: "OK",
+	}
+}
+
+func setex(args []Value) Value {
+	if len(args) != 3 {
+		return Value{
+			kind:   ERROR,
+			strVal: "wrong number of arguments for 'setex' command",
+		}
+	}
+
+	key := args[0].bulkVal
+	ttlStr := args[1].bulkVal
+	val := args[2].bulkVal
+
+	// validate ttl
+	ttl, err := strconv.ParseInt(*ttlStr, 10, 32)
+	if err != nil {
+		return Value{
+			kind:   ERROR,
+			strVal: "value is not an integer or out of range",
+		}
+	}
+
+	if ttl <= 0 {
+		return Value{
+			kind:   ERROR,
+			strVal: "invalid expire time in 'setex' command",
+		}
+	}
+
+	log.Debug().Msgf("setex command [%s] = %s ttl=%s", *key, *val, *ttlStr)
+
+	store.StoreValueWithTTL(*key, *val, ttl)
+
+	return Value{
+		kind:   STRING,
+		strVal: "OK",
+	}
 }
