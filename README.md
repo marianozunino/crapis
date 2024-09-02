@@ -1,28 +1,46 @@
 # Crapis - RESP (REdis Serialization Protocol) Implementation
 
-This project is a basic implementation of the RESP (REdis Serialization Protocol) in Go.
-It's based on the tutorial from [Build Redis from Scratch](https://www.build-redis-from-scratch.dev/en/resp-writer).
+This project is an implementation of the RESP (REdis Serialization Protocol) in Go, based on the tutorial from [Build Redis from Scratch](https://www.build-redis-from-scratch.dev/en/resp-writer). It extends the basic functionality with additional features like TTL (Time To Live) support and key eviction strategies.
 
 ## Overview
 
-RESP is a simple, binary-safe protocol used by Redis for client-server communication. This implementation provides a structure for reading and writing RESP-encoded data and handling basic Redis commands.
+RESP is a simple, binary-safe protocol used by Redis for client-server communication. This implementation provides a structure for reading and writing RESP-encoded data, handling basic Redis commands, and managing data expiration.
 
 ## Features
 
-- Parsing of RESP data types:
-  - Simple Strings
-  - Errors
-  - Integers
-  - Bulk Strings
-  - Arrays
+- Parsing of RESP data types: Simple Strings, Errors, Integers, Bulk Strings, Arrays
 - RESP writer functionality for encoding responses
 - Error handling for invalid inputs
 - CLI flags for server configuration
+- TTL support for key expiration
+- Active and passive eviction strategies
 - Basic Redis commands:
   - GET: Retrieve the value of a key
   - SET: Set the value of a key
-  - SETEX: Set the value and expiration of a key (uses passive strategy for simplicity)
+  - SETEX: Set the value and expiration of a key
+  - DEL: Delete one or more keys
   - PING: Test if the server is responsive
+
+## Eviction Strategies
+
+Crapis implements two eviction strategies for handling key expiration:
+
+1. **Passive Eviction**: When a GET operation is performed on a key, the system checks if the key has expired. If it has, the key is deleted, and a nil value is returned.
+
+2. **Active Eviction**: A background goroutine runs periodically to check for and remove expired keys. This process helps to free up memory proactively, rather than waiting for keys to be accessed.
+
+### How Eviction Works
+
+- **TTL Registry**: The system maintains a separate map (`ttlKeys`) to keep track of keys with TTL. This optimization allows for efficient checking of keys that may have expired.
+
+- **Expiration Check**:
+  - Passive: Performed during GET operations.
+  - Active: A goroutine runs every 250 milliseconds to check for expired keys.
+
+- **Deletion Process**:
+  - The active eviction process uses a two-pass approach to minimize lock contention:
+    1. It first scans for expired keys using a read lock.
+    2. Then it deletes the expired keys, acquiring a write lock only for the actual deletion.
 
 ## Getting Started
 
@@ -43,47 +61,6 @@ RESP is a simple, binary-safe protocol used by Redis for client-server communica
 
 ### Usage
 
-Here's a basic example of how to use the RESP reader and writer:
-
-```go
-package main
-
-import (
-	"fmt"
-	"strings"
-	"github.com/marianozunino/crapis/internal/resp"
-)
-
-func main() {
-	// Create a new RESP reader
-	reader := resp.NewReader(strings.NewReader("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"))
-
-	// Read RESP data
-	value, err := reader.Read()
-	if err != nil {
-		fmt.Printf("Error reading RESP data: %v\n", err)
-		return
-	}
-
-	// Print the parsed data
-	fmt.Printf("Parsed RESP data: %+v\n", value)
-
-	// Create a new RESP writer
-	var buf strings.Builder
-	writer := resp.NewWriter(&buf)
-
-	// Write RESP data
-	err = writer.Write(value)
-	if err != nil {
-		fmt.Printf("Error writing RESP data: %v\n", err)
-		return
-	}
-
-	// Print the encoded data
-	fmt.Printf("Encoded RESP data: %s\n", buf.String())
-}
-```
-
 To interact with the server, you can use `redis-cli`:
 
 ```bash
@@ -101,6 +78,8 @@ OK
 OK
 > PING
 PONG
+> DEL mykey tempkey
+(integer) 2
 ```
 
 ### Running the Server
@@ -145,6 +124,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Future Improvements
 
 - Implement more Redis commands
-- Add persistence options ( AOF would be the simplest option )
+- Add persistence options (AOF would be the simplest option)
 - Add support for more complex RESP data structures
 - Improve error handling and edge case coverage
+- Implement configurable eviction policies (e.g., LRU, LFU)
+- Add clustering and replication support

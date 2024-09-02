@@ -183,3 +183,42 @@ func Test_get(t *testing.T) {
 		})
 	}
 }
+
+func Test_del(t *testing.T) {
+	type args struct {
+		args []Value
+	}
+	tests := []struct {
+		name string
+		args args
+		want Value
+	}{
+		{
+			name: "Del No Args",
+			args: args{args: []Value{}},
+			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'del' command"},
+		},
+		{
+			name: "Del",
+			args: args{args: []Value{
+				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
+			}},
+			want: Value{kind: STRING, strVal: "0"},
+		},
+		{
+			name: "Multiple Keys",
+			args: args{args: []Value{
+				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
+				Value{kind: BULK, bulkVal: stringPtr("del_key2")},
+			}},
+			want: Value{kind: STRING, strVal: "0"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := del(tt.args.args); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("del() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

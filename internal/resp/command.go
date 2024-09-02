@@ -10,7 +10,7 @@ import (
 type handlerFunc = func([]Value) Value
 
 var Handlers map[command.CommandType]handlerFunc
-var store = newStore()
+var store = NewStore()
 
 // init registers all the handlers
 // TODO: Do I really want to use init?
@@ -20,6 +20,7 @@ func init() {
 	Handlers[command.GET] = get
 	Handlers[command.SET] = set
 	Handlers[command.SETEX] = setex
+	Handlers[command.DEL] = del
 }
 
 func ping(args []Value) Value {
@@ -127,5 +128,23 @@ func setex(args []Value) Value {
 	return Value{
 		kind:   STRING,
 		strVal: "OK",
+	}
+}
+
+func del(args []Value) Value {
+	if len(args) == 0 {
+		return Value{
+			kind:   ERROR,
+			strVal: "wrong number of arguments for 'del' command",
+		}
+	}
+	keys := make([]string, len(args))
+	for i, arg := range args {
+		keys[i] = *arg.bulkVal
+	}
+	deletedKeys := store.DeleteKey(keys...)
+	return Value{
+		kind:   STRING,
+		strVal: strconv.Itoa(deletedKeys),
 	}
 }

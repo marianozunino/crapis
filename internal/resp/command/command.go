@@ -15,6 +15,7 @@ const (
 	GET   CommandType = "GET"
 	SET   CommandType = "SET"
 	SETEX CommandType = "SETEX"
+	DEL   CommandType = "DEL"
 )
 
 func ParseCommand(in string) (CommandType, error) {
@@ -28,6 +29,8 @@ func ParseCommand(in string) (CommandType, error) {
 		return SETEX, nil
 	case string(GET):
 		return GET, nil
+	case string(DEL):
+		return DEL, nil
 	}
 	return "", fmt.Errorf("%q is not a valid command: %w", in, ErrInvalidCommand)
 }
