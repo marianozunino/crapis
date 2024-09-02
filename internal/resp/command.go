@@ -16,6 +16,20 @@ func init() {
 }
 
 func ping(args []Value) Value {
+	if len(args) > 1 {
+		return Value{
+			kind:   ERROR,
+			strVal: "wrong number of arguments for 'ping' command",
+		}
+	}
+
+	if len(args) == 1 {
+		return Value{
+			kind:   STRING,
+			strVal: *args[0].bulkVal,
+		}
+	}
+
 	return Value{
 		kind:   STRING,
 		strVal: "PONG",
