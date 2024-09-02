@@ -50,7 +50,7 @@ import (
 
 func main() {
 	// Create a new RESP reader
-	reader := resp.NewResp(strings.NewReader("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"))
+	reader := resp.NewReader(strings.NewReader("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"))
 
 	// Read RESP data
 	value, err := reader.Read()

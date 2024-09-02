@@ -1,10 +1,12 @@
 package resp
 
-import "github.com/rs/zerolog/log"
+import (
+	"github.com/rs/zerolog/log"
+)
 
-func (r *Resp) readArray() (Value, error) {
+func (r *Reader) readArray() (Value, error) {
 	v := Value{}
-	v.kind = "array"
+	v.kind = ARRAY
 
 	// read length of array
 	size, _, err := r.readInteger()

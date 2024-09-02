@@ -1,15 +1,20 @@
 package resp
 
+// Define Redis type constants as a custom type.
+type RedisType byte
+
 const (
-	// https://redis.io/docs/latest/develop/reference/protocol-spec/#simple-strings
-	STRING  byte = '+'
-	ERROR   byte = '-'
-	INTEGER byte = ':'
-	BULK    byte = '$'
-	ARRAY   byte = '*'
+	// Redis protocol type indicators as per the Redis protocol specification.
+	STRING  RedisType = '+'
+	ERROR   RedisType = '-'
+	INTEGER RedisType = ':'
+	BULK    RedisType = '$'
+	ARRAY   RedisType = '*'
+	NULL    RedisType = '_'
 )
 
 const (
-	R byte = '\r'
-	N byte = '\n'
+	// Carriage return and newline characters.
+	CR byte = '\r'
+	LF byte = '\n'
 )

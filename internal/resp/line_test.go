@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestResp_readLine(t *testing.T) {
+func TestReader_readLine(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -39,19 +39,19 @@ func TestResp_readLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &Resp{
+			r := &Reader{
 				reader: bufio.NewReader(strings.NewReader(tt.input)),
 			}
 			gotLine, gotN, err := r.readLine()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Resp.readLine() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Reader.readLine() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotLine, tt.wantLine) {
-				t.Errorf("Resp.readLine() gotLine = %v, want %v", gotLine, tt.wantLine)
+				t.Errorf("Reader.readLine() gotLine = %v, want %v", gotLine, tt.wantLine)
 			}
 			if gotN != tt.wantN {
-				t.Errorf("Resp.readLine() gotN = %v, want %v", gotN, tt.wantN)
+				t.Errorf("Reader.readLine() gotN = %v, want %v", gotN, tt.wantN)
 			}
 		})
 	}

@@ -1,44 +1,26 @@
 package resp
 
 import (
-	"bufio"
-	"fmt"
-	"io"
+	"net"
+
+	"github.com/rs/zerolog/log"
 )
 
-type Value struct {
-	kind string
+func HandleConnection(conn net.Conn) {
+	defer conn.Close()
+	for {
 
-	strVal   string
-	numVal   int
-	bulkVal  string
-	arrayVal []Value
-}
+		respReader := NewReader(conn)
 
-type Resp struct {
-	reader *bufio.Reader
-}
+		value, err := respReader.Read()
+		if err != nil {
+			log.Debug().Msgf("Error reading from client: %s", err.Error())
+			return
+		}
 
-func NewResp(rd io.Reader) Resp {
-	return Resp{
-		reader: bufio.NewReader(rd),
-	}
-}
+		log.Debug().Msgf("Value: %+v", value)
 
-func (r *Resp) Read() (Value, error) {
-	kind, err := r.reader.ReadByte()
-
-	if err != nil {
-		return Value{}, err
-	}
-
-	switch kind {
-	case ARRAY:
-		return r.readArray()
-	case BULK:
-		return r.readBulk()
-	default:
-		fmt.Printf("Unknown type: %v", string(kind))
-		return Value{}, fmt.Errorf("unknown type: %v", string(kind))
+		respWriter := NewWriter(conn)
+		respWriter.Write(Value{kind: STRING, strVal: "OK"})
 	}
 }

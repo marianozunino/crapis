@@ -62,24 +62,6 @@ func (s *Server) Run() {
 			log.Error().Msgf("Error accepting connection: %v", err)
 			continue
 		}
-		go s.handleConnection(conn)
-	}
-}
-
-func (s *Server) handleConnection(conn net.Conn) {
-	defer conn.Close()
-	for {
-
-		resp := resp.NewResp(conn)
-
-		value, err := resp.Read()
-		if err != nil {
-			log.Debug().Msgf("Error reading from client: %s", err.Error())
-			return
-		}
-
-		log.Debug().Msgf("Value: %+v", value)
-
-		conn.Write([]byte("+OK\r\n"))
+		go resp.HandleConnection(conn)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestResp_readInteger(t *testing.T) {
+func TestReader_readInteger(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
@@ -45,19 +45,19 @@ func TestResp_readInteger(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &Resp{
+			r := &Reader{
 				reader: bufio.NewReader(strings.NewReader(tt.input)),
 			}
 			gotX, gotN, err := r.readInteger()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Resp.readInteger() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Reader.readInteger() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotX != tt.wantX {
-				t.Errorf("Resp.readInteger() gotX = %v, want %v", gotX, tt.wantX)
+				t.Errorf("Reader.readInteger() gotX = %v, want %v", gotX, tt.wantX)
 			}
 			if gotN != tt.wantN {
-				t.Errorf("Resp.readInteger() gotN = %v, want %v", gotN, tt.wantN)
+				t.Errorf("Reader.readInteger() gotN = %v, want %v", gotN, tt.wantN)
 			}
 		})
 	}
