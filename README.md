@@ -5,7 +5,7 @@ It's based on the tutorial from [Build Redis from Scratch](https://www.build-red
 
 ## Overview
 
-RESP is a simple, binary-safe protocol used by Redis for client-server communication. This implementation provides a basic structure for reading RESP-encoded data.
+RESP is a simple, binary-safe protocol used by Redis for client-server communication. This implementation provides a structure for reading and writing RESP-encoded data and handling basic Redis commands.
 
 ## Features
 
@@ -15,8 +15,14 @@ RESP is a simple, binary-safe protocol used by Redis for client-server communica
   - Integers
   - Bulk Strings
   - Arrays
+- RESP writer functionality for encoding responses
 - Error handling for invalid inputs
 - CLI flags for server configuration
+- Basic Redis commands:
+  - GET: Retrieve the value of a key
+  - SET: Set the value of a key
+  - SETEX: Set the value and expiration of a key (uses passive strategy for simplicity)
+  - PING: Test if the server is responsive
 
 ## Getting Started
 
@@ -37,7 +43,7 @@ RESP is a simple, binary-safe protocol used by Redis for client-server communica
 
 ### Usage
 
-Here's a basic example of how to use the RESP reader:
+Here's a basic example of how to use the RESP reader and writer:
 
 ```go
 package main
@@ -61,16 +67,41 @@ func main() {
 
 	// Print the parsed data
 	fmt.Printf("Parsed RESP data: %+v\n", value)
+
+	// Create a new RESP writer
+	var buf strings.Builder
+	writer := resp.NewWriter(&buf)
+
+	// Write RESP data
+	err = writer.Write(value)
+	if err != nil {
+		fmt.Printf("Error writing RESP data: %v\n", err)
+		return
+	}
+
+	// Print the encoded data
+	fmt.Printf("Encoded RESP data: %s\n", buf.String())
 }
 ```
 
-Or better yet, use `redis-cli` in conjunction with the `go run .` command:
+To interact with the server, you can use `redis-cli`:
 
 ```bash
-redis-cli -r "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"
+redis-cli -p 6379
 ```
 
-or use it in interactive mode.
+Then you can use the implemented commands:
+
+```
+> SET mykey "Hello"
+OK
+> GET mykey
+"Hello"
+> SETEX tempkey 10 "This will expire"
+OK
+> PING
+PONG
+```
 
 ### Running the Server
 
@@ -113,7 +144,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Future Improvements
 
-- Implement RESP writer functionality
+- Implement more Redis commands
+- Add persistence options ( AOF would be the simplest option )
 - Add support for more complex RESP data structures
 - Improve error handling and edge case coverage
-- Benchmark performance and optimize where necessary
