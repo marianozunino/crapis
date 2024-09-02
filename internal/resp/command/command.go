@@ -12,6 +12,8 @@ type CommandType string
 
 const (
 	PING CommandType = "PING"
+	SET  CommandType = "SET"
+	GET  CommandType = "GET"
 )
 
 func ParseCommand(in string) (CommandType, error) {
@@ -19,6 +21,10 @@ func ParseCommand(in string) (CommandType, error) {
 	switch in {
 	case string(PING):
 		return PING, nil
+	case string(SET):
+		return SET, nil
+	case string(GET):
+		return GET, nil
 	}
 	return "", fmt.Errorf("%q is not a valid command: %w", in, ErrInvalidCommand)
 }
