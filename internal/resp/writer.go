@@ -1,6 +1,8 @@
 package resp
 
-import "io"
+import (
+	"io"
+)
 
 type Writer struct {
 	writer io.Writer

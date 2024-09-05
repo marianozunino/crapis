@@ -103,12 +103,6 @@ func (v Value) marshallInteger() []byte {
 	var bytes []byte
 	bytes = append(bytes, byte(INTEGER))
 
-	if v.NumVal < 0 {
-		bytes = append(bytes)
-	} else {
-		bytes = append(bytes, '+')
-	}
-
 	bytes = append(bytes, strconv.Itoa(v.NumVal)...)
 
 	bytes = append(bytes, CR, LF)

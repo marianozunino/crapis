@@ -32,6 +32,7 @@ func (e *executor) registerHandlers() {
 	e.handlers[SET] = e.set
 	e.handlers[SETEX] = e.setex
 	e.handlers[DEL] = e.del
+	e.handlers[EXPIRE] = e.expire
 }
 
 func (e *executor) Execute(cmd CommandType, args []resp.Value) resp.Value {

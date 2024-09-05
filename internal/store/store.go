@@ -135,3 +135,21 @@ func (s *Store) DeleteKey(keys ...string) int {
 	}
 	return deletedKeys
 }
+
+func (s *Store) Expire(key string, ttl int64) int {
+	// find key and set ttl
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if val, ok := s.setMap[key]; ok {
+		expireAt := time.Now().Add(time.Duration(ttl) * time.Second)
+		val.ttl = expireAt
+
+		s.setMap[key] = val
+		s.ttlKeys[key] = struct{}{} // Add to TTL registry
+
+		return 1
+	}
+
+	return 0
+}

@@ -13,44 +13,41 @@ func TestReader_Marshal(t *testing.T) {
 	}{
 		{
 			name:  "Marshal String",
-			input: Value{Kind: STRING, StrVal: "hello"},
+			input: NewBulk(stringPtr("hello")),
 			want:  []byte("+hello\r\n"),
 		},
 
 		{
 			name:  "Marshal Bulk",
-			input: Value{Kind: BULK, BulkVal: stringPtr("hello")},
+			input: NewBulk(stringPtr("hello")),
 			want:  []byte("$5\r\nhello\r\n"),
 		},
 
 		{
-			name: "Marshal Array",
-			input: Value{Kind: ARRAY, ArrayVal: []Value{
-				{Kind: BULK, BulkVal: stringPtr("hello")},
-				{Kind: BULK, BulkVal: stringPtr("world")},
-			}},
-			want: []byte("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
+			name:  "Marshal Array",
+			input: NewArray(NewBulk(stringPtr("hello")), NewBulk(stringPtr("world"))),
+			want:  []byte("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
 		},
 
 		{
 			name:  "Marshal Error",
-			input: Value{Kind: ERROR, StrVal: "Error Message"},
+			input: NewError("Error Message"),
 			want:  []byte("-Error Message\r\n"),
 		},
 
 		{
 			name:  "Marshal Positive Integer",
-			input: Value{Kind: INTEGER, NumVal: 42},
-			want:  []byte(":+42\r\n"),
+			input: NewInteger(42),
+			want:  []byte(":42\r\n"),
 		},
 		{
 			name:  "Marshal Negative Integer",
-			input: Value{Kind: INTEGER, NumVal: -42},
+			input: NewInteger(-42),
 			want:  []byte(":-42\r\n"),
 		},
 		{
 			name:  "Marshal Null (RESP3)",
-			input: Value{Kind: NULL},
+			input: NewNull(),
 			want:  []byte("_\r\n"),
 		},
 		{

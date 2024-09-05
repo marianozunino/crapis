@@ -44,12 +44,9 @@ func TestReader_Read(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:  "Array",
-			input: "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n",
-			want: Value{Kind: ARRAY, ArrayVal: []Value{
-				{Kind: BULK, BulkVal: stringPtr("hello")},
-				{Kind: BULK, BulkVal: stringPtr("world")},
-			}},
+			name:    "Array",
+			input:   "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n",
+			want:    NewArray(NewBulk(stringPtr("hello")), NewBulk(stringPtr("world"))),
 			wantErr: false,
 		},
 		{
