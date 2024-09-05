@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (e *Executor) setex(args []resp.Value) resp.Value {
+func (e *executor) setex(args []resp.Value) resp.Value {
 	if len(args) != 3 {
 		return resp.NewError("wrong number of arguments for 'setex' command")
 	}

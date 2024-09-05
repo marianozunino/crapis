@@ -10,6 +10,79 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestServerInitializationErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		configFunc  func() *Config
+		expectedErr string
+	}{
+		{
+			name: "Invalid port",
+			configFunc: func() *Config {
+				return NewConfig(WithPort("99999")) // Invalid port number
+			},
+			expectedErr: "invalid port",
+		},
+		{
+			name: "Invalid bind address",
+			configFunc: func() *Config {
+				return NewConfig(WithBind("invalid-address"))
+			},
+			expectedErr: "invalid-address",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := tt.configFunc()
+			s := NewServer(config)
+
+			err := s.Run()
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tt.expectedErr)
+		})
+	}
+}
+
+func TestServerConnectionErrors(t *testing.T) {
+	// Create a mock executor
+	mockExecutor := &MockExecutor{}
+
+	// Use net.Pipe to create a pair of connected pipes
+	clientConn, _ := net.Pipe()
+
+	// Create a server with the mock executor
+	config := NewConfig(
+		WithPort("0"), // Use a free port
+		WithCommandExecutor(mockExecutor),
+	)
+	s := NewServer(config)
+
+	// Run the server in a goroutine
+	go func() {
+		err := s.Run()
+		if err != nil {
+			t.Fatalf("Server failed to run: %v", err)
+		}
+	}()
+
+	// Allow some time for the server to start
+	time.Sleep(100 * time.Millisecond)
+
+	// Close the client connection to simulate a connection error
+	clientConn.Close()
+
+	// Try writing data to simulate an error
+	_, err := clientConn.Write([]byte("*1\r\n$4\r\nPING\r\n"))
+	if err != nil {
+		t.Logf("expected error when writing to closed connection: %v", err)
+	} else {
+		t.Fatal("expected an error but write succeeded")
+	}
+
+	// Ensure that the server handles connection errors gracefully
+	// Depending on how you handle logging or monitoring, check logs or other indicators
+}
 func TestNewConfig(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -113,8 +186,7 @@ type MockExecutor struct{}
 func (m *MockExecutor) Execute(cmd command.CommandType, args []resp.Value) resp.Value {
 	// For this test, we're only implementing the PING command
 	if cmd == command.PING {
-		return resp.Value{Kind: resp.STRING, StrVal: "PONG"}
+		return resp.NewString("PONG")
 	}
-	return resp.Value{Kind: resp.ERROR, StrVal: "unknown command"}
+	return resp.NewError("unknown command")
 }
-

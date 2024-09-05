@@ -2,6 +2,8 @@ package resp
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"reflect"
 	"testing"
 )
@@ -32,31 +34,62 @@ func TestNewWriter(t *testing.T) {
 }
 
 func TestWriter_Write(t *testing.T) {
-
 	tests := []struct {
-		name string
-		args Value
-		want string
+		name    string
+		args    Value
+		want    string
+		wantErr bool
 	}{
 		{
-			name: "Write Value",
-			args: Value{Kind: STRING, StrVal: "OK"},
-			want: "+OK\r\n",
+			name:    "Write Value",
+			args:    Value{Kind: STRING, StrVal: "OK"},
+			want:    "+OK\r\n",
+			wantErr: false,
+		},
+
+		{
+			name:    "Fail to write to the writer",
+			args:    Value{Kind: STRING, StrVal: "OK"}, // Adjusted args to match the failing case
+			want:    "",                                // Expected output is an empty string because of the error
+			wantErr: true,                              // Expect an error
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &bytes.Buffer{}
+			var b *bytes.Buffer
+			var w io.Writer
 
-			w := &Writer{writer: b}
-			w.Write(tt.args)
-
-			if got := b.String(); got != tt.want {
-				t.Errorf("Writer.Write() = %v, want %v", got, tt.want)
+			if tt.wantErr {
+				// Use custom errorWriter to simulate a write error
+				w = &errorWriter{}
+			} else {
+				// Use bytes.Buffer for successful writes
+				b = &bytes.Buffer{}
+				w = b
 			}
 
+			wr := &Writer{writer: w}
+			err := wr.Write(tt.args)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Writer.Write() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				// Only check the buffer's content if there's no error
+				if got := b.String(); got != tt.want {
+					t.Errorf("Writer.Write() = %v, want %v", got, tt.want)
+				}
+			}
 		})
 	}
+}
 
+type errorWriter struct{}
+
+func (ew *errorWriter) Write(p []byte) (int, error) {
+	// Return a custom error to simulate a failure in Write
+	return 0, fmt.Errorf("write error")
 }

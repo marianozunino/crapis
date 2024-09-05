@@ -35,7 +35,8 @@ func NewInteger(number int) Value {
 }
 
 // NewArray creates a new array Value
-func NewArray(values []Value) Value {
+func NewArray(values ...Value) Value {
+
 	return Value{
 		Kind:     ARRAY,
 		ArrayVal: values,

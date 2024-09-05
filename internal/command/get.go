@@ -5,7 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (e *Executor) get(args []resp.Value) resp.Value {
+func (e *executor) get(args []resp.Value) resp.Value {
 	if len(args) != 1 {
 		return resp.NewError("wrong number of arguments for 'get' command")
 	}

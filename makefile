@@ -40,6 +40,11 @@ audit: test
 test:
 	go test -v -buildvcs ./...
 
+## test/watch: run all tests and watch for changes
+.PHONY: test/watch
+test/watch:
+	go run gotest.tools/gotestsum@latest -f testdox --format-icons text --watch
+
 ## test/cover: run all tests and display coverage
 .PHONY: test/cover
 test/cover:

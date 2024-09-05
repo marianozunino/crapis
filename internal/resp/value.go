@@ -24,7 +24,7 @@ func (v Value) Marshal() []byte {
 	case STRING:
 		return v.marshalString()
 	case INTEGER:
-		return v.marshalInteger()
+		return v.marshallInteger()
 	case NULL:
 		return v.marshallNull()
 	case ERROR:
@@ -99,12 +99,12 @@ func (v Value) marshallError() []byte {
 
 // marshallInteger returns the Redis protocol representation of an integer
 // Example: ":123\r\n"
-func (v Value) marshalInteger() []byte {
+func (v Value) marshallInteger() []byte {
 	var bytes []byte
 	bytes = append(bytes, byte(INTEGER))
 
 	if v.NumVal < 0 {
-		bytes = append(bytes, '-')
+		bytes = append(bytes)
 	} else {
 		bytes = append(bytes, '+')
 	}

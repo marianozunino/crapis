@@ -58,6 +58,12 @@ func TestReader_Read(t *testing.T) {
 			want:    Value{},
 			wantErr: true,
 		},
+		{
+			name:    "Fail to read byte from reader",
+			input:   "",
+			want:    Value{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

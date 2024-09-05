@@ -21,7 +21,7 @@ func handleConnection(conn net.Conn, executor command.Executor) {
 		}
 		cmd, args, err := parseRequest(value)
 		if err != nil {
-			respWriter.Write(resp.Value{Kind: resp.ERROR, StrVal: err.Error()})
+			respWriter.Write(resp.NewError(err.Error()))
 			continue
 		}
 		result := executor.Execute(cmd, args)
