@@ -19,26 +19,28 @@ type Store struct {
 	mu      sync.RWMutex
 
 	passiveEvictionEnabled bool
-}
-
-type StoreOption func(*Store)
-
-func WithPassiveEvictionEnabled(enabled bool) StoreOption {
-	return func(s *Store) {
-		s.passiveEvictionEnabled = enabled
-	}
+	evectionIntervalMs     time.Duration
+	evictionTimeoutMs      time.Duration
 }
 
 func NewStore(opts ...StoreOption) *Store {
 	s := &Store{
-		setMap:                 make(map[string]data),
-		ttlKeys:                make(map[string]struct{}),
-		mu:                     sync.RWMutex{},
+		setMap:  make(map[string]data),
+		ttlKeys: make(map[string]struct{}),
+		mu:      sync.RWMutex{},
+
 		passiveEvictionEnabled: true,
+		evectionIntervalMs:     250 * time.Millisecond,
+		evictionTimeoutMs:      10 * time.Millisecond,
 	}
 
 	for _, opt := range opts {
 		opt(s)
+	}
+
+	// evictionTimeoutMs must be at least half of evectionIntervalMs
+	if s.evictionTimeoutMs < s.evectionIntervalMs/2 {
+		s.evictionTimeoutMs = s.evectionIntervalMs / 2
 	}
 
 	if s.passiveEvictionEnabled {
@@ -51,12 +53,12 @@ func NewStore(opts ...StoreOption) *Store {
 func (s *Store) startTTLExpirationThread() {
 	log.Debug().Msg("Starting TTL Expiration Thread")
 	// NOTE: run 4 times a second
-	ticker := time.NewTicker(250 * time.Millisecond)
+	ticker := time.NewTicker(s.evectionIntervalMs)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		// NOTE: the job can only take 10ms to avoid blocking other operations
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), s.evictionTimeoutMs)
 		evictedKeys, err := s.deleteExpiredKeys(ctx)
 		cancel()
 

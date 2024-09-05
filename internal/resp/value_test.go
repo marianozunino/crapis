@@ -13,7 +13,7 @@ func TestReader_marshalString(t *testing.T) {
 	}{
 		{
 			name:  "Marshal string",
-			input: Value{kind: STRING, strVal: "hello"},
+			input: Value{Kind: STRING, StrVal: "hello"},
 			want:  []byte("+hello\r\n"),
 		},
 	}
@@ -34,7 +34,7 @@ func TestReader_marshalBulk(t *testing.T) {
 	}{
 		{
 			name:  "Marshal Bulk",
-			input: Value{kind: BULK, bulkVal: stringPtr("hello")},
+			input: Value{Kind: BULK, BulkVal: stringPtr("hello")},
 			want:  []byte("$5\r\nhello\r\n"),
 		},
 	}
@@ -55,7 +55,7 @@ func TestReader_marshalArray(t *testing.T) {
 	}{
 		{
 			name:  "Marshal Array",
-			input: Value{kind: ARRAY, arrayVal: []Value{{kind: BULK, bulkVal: stringPtr("hello")}, {kind: BULK, bulkVal: stringPtr("world")}}},
+			input: Value{Kind: ARRAY, ArrayVal: []Value{{Kind: BULK, BulkVal: stringPtr("hello")}, {Kind: BULK, BulkVal: stringPtr("world")}}},
 			want:  []byte("*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n"),
 		},
 	}
@@ -76,7 +76,7 @@ func TestReader_marshallNull(t *testing.T) {
 	}{
 		{
 			name:  "Marshal Null",
-			input: Value{kind: NULL},
+			input: Value{Kind: NULL},
 			want:  []byte("_\r\n"),
 		},
 	}
@@ -97,7 +97,7 @@ func TestReader_marshallError(t *testing.T) {
 	}{
 		{
 			name:  "Marshal Error",
-			input: Value{kind: ERROR, strVal: "Error Message"},
+			input: Value{Kind: ERROR, StrVal: "Error Message"},
 			want:  []byte("-Error Message\r\n"),
 		},
 	}

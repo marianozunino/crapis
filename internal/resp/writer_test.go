@@ -40,7 +40,7 @@ func TestWriter_Write(t *testing.T) {
 	}{
 		{
 			name: "Write Value",
-			args: Value{kind: STRING, strVal: "OK"},
+			args: Value{Kind: STRING, StrVal: "OK"},
 			want: "+OK\r\n",
 		},
 	}

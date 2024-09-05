@@ -24,8 +24,10 @@ package cmd
 import (
 	"os"
 
-	"github.com/marianozunino/crapis/internal"
+	"github.com/marianozunino/crapis/internal/command"
 	"github.com/marianozunino/crapis/internal/logger"
+	"github.com/marianozunino/crapis/internal/server"
+	"github.com/marianozunino/crapis/internal/store"
 	"github.com/spf13/cobra"
 )
 
@@ -40,10 +42,14 @@ var rootCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.ConfigureLogger(debug)
-		internal.NewServer(
-			internal.WithPort(port),
-			internal.WithBind(bind),
-		).Run()
+		db := store.NewStore()
+		executor := command.NewExecutor(db)
+		config := server.NewConfig(
+			server.WithPort(port),
+			server.WithBind(bind),
+			server.WithCommandExecutor(executor),
+		)
+		server.NewServer(config).Run()
 	},
 }
 

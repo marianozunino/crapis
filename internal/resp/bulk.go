@@ -3,7 +3,7 @@ package resp
 func (r *Reader) readBulk() (Value, error) {
 	v := Value{}
 
-	v.kind = BULK
+	v.Kind = BULK
 
 	len, _, err := r.readInteger()
 	if err != nil {
@@ -14,8 +14,8 @@ func (r *Reader) readBulk() (Value, error) {
 
 	r.reader.Read(bulk)
 
-	v.bulkVal = new(string)
-	*v.bulkVal = string(bulk)
+	v.BulkVal = new(string)
+	*v.BulkVal = string(bulk)
 
 	// Read the trailing CRLF
 	r.readLine()

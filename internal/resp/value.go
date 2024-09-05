@@ -6,17 +6,17 @@ import (
 
 // Value represents a parsed Redis value with different types.
 type Value struct {
-	kind RedisType
+	Kind RedisType
 
 	// Specific fields to store different types of Redis values.
-	strVal   string  // For simple strings and error messages.
-	numVal   int     // For integer values.
-	bulkVal  *string // For bulk strings (nil if not present).
-	arrayVal []Value // For arrays.
+	StrVal   string  // For simple strings and error messages.
+	NumVal   int     // For integer values.
+	BulkVal  *string // For bulk strings (nil if not present).
+	ArrayVal []Value // For arrays.
 }
 
 func (v Value) Marshal() []byte {
-	switch v.kind {
+	switch v.Kind {
 	case ARRAY:
 		return v.marshalArray()
 	case BULK:
@@ -40,7 +40,7 @@ func (v Value) marshalString() []byte {
 	var bytes []byte
 
 	bytes = append(bytes, byte(STRING))
-	bytes = append(bytes, v.strVal...)
+	bytes = append(bytes, v.StrVal...)
 	bytes = append(bytes, CR, LF)
 
 	return bytes
@@ -52,9 +52,9 @@ func (v Value) marshalBulk() []byte {
 	var bytes []byte
 
 	bytes = append(bytes, byte(BULK))
-	bytes = append(bytes, strconv.Itoa(len(*v.bulkVal))...)
+	bytes = append(bytes, strconv.Itoa(len(*v.BulkVal))...)
 	bytes = append(bytes, CR, LF)
-	bytes = append(bytes, *v.bulkVal...)
+	bytes = append(bytes, *v.BulkVal...)
 	bytes = append(bytes, CR, LF)
 
 	return bytes
@@ -66,10 +66,10 @@ func (v Value) marshalArray() []byte {
 	var bytes []byte
 
 	bytes = append(bytes, byte(ARRAY))
-	bytes = append(bytes, strconv.Itoa(len(v.arrayVal))...)
+	bytes = append(bytes, strconv.Itoa(len(v.ArrayVal))...)
 	bytes = append(bytes, CR, LF)
 
-	for _, val := range v.arrayVal {
+	for _, val := range v.ArrayVal {
 		bytes = append(bytes, val.Marshal()...)
 	}
 
@@ -91,7 +91,7 @@ func (v Value) marshallError() []byte {
 
 	var bytes []byte
 	bytes = append(bytes, byte(ERROR))
-	bytes = append(bytes, v.strVal...)
+	bytes = append(bytes, v.StrVal...)
 	bytes = append(bytes, CR, LF)
 
 	return bytes
@@ -103,13 +103,13 @@ func (v Value) marshalInteger() []byte {
 	var bytes []byte
 	bytes = append(bytes, byte(INTEGER))
 
-	if v.numVal < 0 {
+	if v.NumVal < 0 {
 		bytes = append(bytes, '-')
 	} else {
 		bytes = append(bytes, '+')
 	}
 
-	bytes = append(bytes, strconv.Itoa(v.numVal)...)
+	bytes = append(bytes, strconv.Itoa(v.NumVal)...)
 
 	bytes = append(bytes, CR, LF)
 	return bytes

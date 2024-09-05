@@ -1,63 +1,71 @@
-package internal
+package server
 
 import (
 	"net"
 	"testing"
 	"time"
 
+	"github.com/marianozunino/crapis/internal/command"
+	"github.com/marianozunino/crapis/internal/resp"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewServer(t *testing.T) {
+func TestNewConfig(t *testing.T) {
 	tests := []struct {
 		name           string
-		opts           []ServerOption
+		opts           []Option
 		expectedPort   string
 		expectedBind   string
 		expectedListen string
 	}{
 		{
 			name:           "Default configuration",
-			opts:           []ServerOption{},
+			opts:           []Option{},
 			expectedPort:   "6379",
 			expectedBind:   "0.0.0.0",
 			expectedListen: "0.0.0.0:6379",
 		},
 		{
 			name:           "Custom port",
-			opts:           []ServerOption{WithPort("8080")},
+			opts:           []Option{WithPort("8080")},
 			expectedPort:   "8080",
 			expectedBind:   "0.0.0.0",
 			expectedListen: "0.0.0.0:8080",
 		},
 		{
 			name:           "Custom bind",
-			opts:           []ServerOption{WithBind("127.0.0.1")},
+			opts:           []Option{WithBind("127.0.0.1")},
 			expectedPort:   "6379",
 			expectedBind:   "127.0.0.1",
 			expectedListen: "127.0.0.1:6379",
 		},
 		{
 			name:           "Custom port and bind",
-			opts:           []ServerOption{WithPort("8080"), WithBind("127.0.0.1")},
+			opts:           []Option{WithPort("8080"), WithBind("127.0.0.1")},
 			expectedPort:   "8080",
 			expectedBind:   "127.0.0.1",
 			expectedListen: "127.0.0.1:8080",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewServer(tt.opts...)
-			assert.Equal(t, tt.expectedPort, s.port)
-			assert.Equal(t, tt.expectedBind, s.bind)
-			assert.Equal(t, tt.expectedListen, s.listenAddr)
+			c := NewConfig(tt.opts...)
+			assert.Equal(t, tt.expectedPort, c.Port)
+			assert.Equal(t, tt.expectedBind, c.Bind)
+			assert.Equal(t, tt.expectedListen, c.ListenAddr)
 		})
 	}
 }
 
 func TestServerRun(t *testing.T) {
-	s := NewServer(WithPort("0")) // Use port 0 to let the system assign a free port
+	// Create a mock executor for testing
+	mockExecutor := &MockExecutor{}
+
+	config := NewConfig(
+		WithPort("0"), // Use port 0 to let the system assign a free port
+		WithCommandExecutor(mockExecutor),
+	)
+	s := NewServer(config)
 
 	go s.Run()
 
@@ -65,7 +73,7 @@ func TestServerRun(t *testing.T) {
 	var conn net.Conn
 	var err error
 	for i := 0; i < 10; i++ {
-		conn, err = net.Dial("tcp", s.listenAddr)
+		conn, err = net.Dial("tcp", s.config.ListenAddr)
 		if err == nil {
 			break
 		}
@@ -98,3 +106,15 @@ func TestServerRun(t *testing.T) {
 		})
 	}
 }
+
+// MockExecutor is a mock implementation of the command.Executor interface for testing
+type MockExecutor struct{}
+
+func (m *MockExecutor) Execute(cmd command.CommandType, args []resp.Value) resp.Value {
+	// For this test, we're only implementing the PING command
+	if cmd == command.PING {
+		return resp.Value{Kind: resp.STRING, StrVal: "PONG"}
+	}
+	return resp.Value{Kind: resp.ERROR, StrVal: "unknown command"}
+}
+

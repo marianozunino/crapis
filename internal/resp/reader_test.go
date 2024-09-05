@@ -40,15 +40,15 @@ func TestReader_Read(t *testing.T) {
 		{
 			name:    "Bulk string",
 			input:   "$5\r\nhello\r\n",
-			want:    Value{kind: BULK, bulkVal: stringPtr("hello")},
+			want:    Value{Kind: BULK, BulkVal: stringPtr("hello")},
 			wantErr: false,
 		},
 		{
 			name:  "Array",
 			input: "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n",
-			want: Value{kind: ARRAY, arrayVal: []Value{
-				{kind: BULK, bulkVal: stringPtr("hello")},
-				{kind: BULK, bulkVal: stringPtr("world")},
+			want: Value{Kind: ARRAY, ArrayVal: []Value{
+				{Kind: BULK, BulkVal: stringPtr("hello")},
+				{Kind: BULK, BulkVal: stringPtr("world")},
 			}},
 			wantErr: false,
 		},

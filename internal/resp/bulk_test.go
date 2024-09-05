@@ -17,19 +17,19 @@ func TestReader_readBulk(t *testing.T) {
 		{
 			name:    "Valid bulk string",
 			input:   "$5\r\nhello\r\n",
-			want:    Value{kind: BULK, bulkVal: stringPtr("hello")},
+			want:    Value{Kind: BULK, BulkVal: stringPtr("hello")},
 			wantErr: false,
 		},
 		{
 			name:    "Empty bulk string",
 			input:   "$0\r\n\r\n",
-			want:    Value{kind: BULK, bulkVal: stringPtr("")},
+			want:    Value{Kind: BULK, BulkVal: stringPtr("")},
 			wantErr: false,
 		},
 		{
 			name:    "Invalid bulk string size",
 			input:   "$invalid\r\n",
-			want:    Value{kind: BULK, bulkVal: nil},
+			want:    Value{Kind: BULK, BulkVal: nil},
 			wantErr: true,
 		},
 	}

@@ -21,22 +21,22 @@ func TestReader_readArray(t *testing.T) {
 		{
 			name:  "Valid array",
 			input: "*2\r\n$5\r\nhello\r\n$5\r\nworld\r\n",
-			want: Value{kind: ARRAY, arrayVal: []Value{
-				{kind: BULK, bulkVal: stringPtr("hello")},
-				{kind: BULK, bulkVal: stringPtr("world")},
+			want: Value{Kind: ARRAY, ArrayVal: []Value{
+				{Kind: BULK, BulkVal: stringPtr("hello")},
+				{Kind: BULK, BulkVal: stringPtr("world")},
 			}},
 			wantErr: false,
 		},
 		{
 			name:    "Empty array",
 			input:   "*0\r\n",
-			want:    Value{kind: ARRAY, arrayVal: []Value{}},
+			want:    Value{Kind: ARRAY, ArrayVal: []Value{}},
 			wantErr: false,
 		},
 		{
 			name:    "Invalid array size",
 			input:   "*invalid\r\n",
-			want:    Value{kind: ARRAY},
+			want:    Value{Kind: ARRAY},
 			wantErr: true,
 		},
 	}

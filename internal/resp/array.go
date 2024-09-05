@@ -6,7 +6,7 @@ import (
 
 func (r *Reader) readArray() (Value, error) {
 	v := Value{}
-	v.kind = ARRAY
+	v.Kind = ARRAY
 
 	// read length of array
 	size, _, err := r.readInteger()
@@ -16,7 +16,7 @@ func (r *Reader) readArray() (Value, error) {
 	}
 
 	// foreach line, parse and read the value
-	v.arrayVal = make([]Value, 0)
+	v.ArrayVal = make([]Value, 0)
 
 	for i := 0; i < size; i++ {
 		val, err := r.Read()
@@ -26,7 +26,7 @@ func (r *Reader) readArray() (Value, error) {
 		}
 
 		// append parsed value to array
-		v.arrayVal = append(v.arrayVal, val)
+		v.ArrayVal = append(v.ArrayVal, val)
 	}
 
 	return v, nil

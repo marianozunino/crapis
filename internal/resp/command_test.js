@@ -17,22 +17,22 @@ func Test_ping(t *testing.T) {
 		{
 			name: "Ping No Args",
 			args: args{args: []Value{}},
-			want: Value{kind: STRING, strVal: "PONG"},
+			want: Value{Kind: STRING, StrVal: "PONG"},
 		},
 		{
 			name: "Ping With Args",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: STRING, strVal: "test"},
+			want: Value{Kind: STRING, StrVal: "test"},
 		},
 		{
 			name: "Ping Invalid Amount of Args",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'ping' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'ping' command"},
 		},
 	}
 	for _, tt := range tests {
@@ -56,24 +56,24 @@ func Test_set(t *testing.T) {
 		{
 			name: "Set No Args",
 			args: args{args: []Value{}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'set' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'set' command"},
 		},
 		{
 			name: "Set With Args",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: STRING, strVal: "OK"},
+			want: Value{Kind: STRING, StrVal: "OK"},
 		},
 		{
 			name: "Set Invalid Amount of Args",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'set' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'set' command"},
 		},
 	}
 	for _, tt := range tests {
@@ -97,43 +97,43 @@ func Test_setex(t *testing.T) {
 		{
 			name: "Setex No Args",
 			args: args{args: []Value{}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'setex' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'setex' command"},
 		},
 		{
 			name: "Setex Invalid TTL",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "value is not an integer or out of range"},
+			want: Value{Kind: ERROR, StrVal: "value is not an integer or out of range"},
 		},
 		{
 			name: "Invalid Amount of Args (2)",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'setex' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'setex' command"},
 		},
 		{
 			name: "Invalid Amount of Args (4)",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("2")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("2")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'setex' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'setex' command"},
 		},
 		{
 			name: "Setex",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("2")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("2")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: STRING, strVal: "OK"},
+			want: Value{Kind: STRING, StrVal: "OK"},
 		},
 	}
 	for _, tt := range tests {
@@ -157,22 +157,22 @@ func Test_get(t *testing.T) {
 		{
 			name: "Get No Args",
 			args: args{args: []Value{}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'get' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'get' command"},
 		},
 		{
 			name: "Get",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: STRING, strVal: "test"},
+			want: Value{Kind: STRING, StrVal: "test"},
 		},
 		{
 			name: "Get Invalid Amount of Args",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("test")},
-				Value{kind: BULK, bulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
+				Value{Kind: BULK, BulkVal: stringPtr("test")},
 			}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'get' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'get' command"},
 		},
 	}
 	for _, tt := range tests {
@@ -196,22 +196,22 @@ func Test_del(t *testing.T) {
 		{
 			name: "Del No Args",
 			args: args{args: []Value{}},
-			want: Value{kind: ERROR, strVal: "wrong number of arguments for 'del' command"},
+			want: Value{Kind: ERROR, StrVal: "wrong number of arguments for 'del' command"},
 		},
 		{
 			name: "Del",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
+				Value{Kind: BULK, BulkVal: stringPtr("del_key1")},
 			}},
-			want: Value{kind: INTEGER, strVal: "0"},
+			want: Value{Kind: INTEGER, StrVal: "0"},
 		},
 		{
 			name: "Multiple Keys",
 			args: args{args: []Value{
-				Value{kind: BULK, bulkVal: stringPtr("del_key1")},
-				Value{kind: BULK, bulkVal: stringPtr("del_key2")},
+				Value{Kind: BULK, BulkVal: stringPtr("del_key1")},
+				Value{Kind: BULK, BulkVal: stringPtr("del_key2")},
 			}},
-			want: Value{kind: INTEGER, strVal: "0"},
+			want: Value{Kind: INTEGER, StrVal: "0"},
 		},
 	}
 	for _, tt := range tests {
