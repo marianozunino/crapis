@@ -25,10 +25,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/marianozunino/crapis/internal/aof"
 	"github.com/marianozunino/crapis/internal/command"
 	"github.com/marianozunino/crapis/internal/logger"
 	"github.com/marianozunino/crapis/internal/server"
 	"github.com/marianozunino/crapis/internal/store"
+	"github.com/rs/zerolog/log"
+
 	"github.com/spf13/cobra"
 )
 
@@ -40,6 +44,9 @@ var debug bool
 var evictionIntervalMs int64
 var evictionTimeoutMs int64
 
+var aofEnabled bool
+var aofPath string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "crapis",
@@ -47,6 +54,16 @@ var rootCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.ConfigureLogger(debug)
+		var dbFile *aof.Aof
+		var err error
+
+		if aofEnabled {
+			spew.Dump(aofPath)
+			if dbFile, err = aof.NewAof(aofPath); err != nil {
+				log.Error().Msgf("Error creating AOF: %v", err)
+				os.Exit(1)
+			}
+		}
 		db := store.NewStore(
 			store.WithPassiveEviction(passiveEvictionEnabled),
 			store.WithEvictionInterval(time.Duration(evictionIntervalMs)*time.Millisecond),
@@ -57,6 +74,7 @@ var rootCmd = &cobra.Command{
 			server.WithPort(port),
 			server.WithBind(bind),
 			server.WithCommandExecutor(executor),
+			server.WithAof(dbFile),
 		)
 		server.NewServer(config).Run()
 	},
@@ -77,4 +95,7 @@ func init() {
 
 	rootCmd.Flags().Int64VarP(&evictionIntervalMs, "eviction-interval-ms", "i", 250, "Eviction interval in milliseconds")
 	rootCmd.Flags().Int64VarP(&evictionTimeoutMs, "eviction-timeout-ms", "t", 10, "Eviction timeout in milliseconds, must be at at most half of eviction-interval-ms")
+
+	rootCmd.Flags().BoolVarP(&aofEnabled, "aof-enabled", "a", false, "Enable AOF")
+	rootCmd.Flags().StringVarP(&aofPath, "aof", "f", "database.aof", "Path to AOF file")
 }

@@ -2,14 +2,16 @@ package server
 
 import (
 	"errors"
+	"io"
+	"net"
+	"strings"
+
 	"github.com/marianozunino/crapis/internal/command"
 	"github.com/marianozunino/crapis/internal/resp"
 	"github.com/rs/zerolog/log"
-	"net"
-	"strings"
 )
 
-func handleConnection(conn net.Conn, executor command.Executor) {
+func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
 	respReader := resp.NewReader(conn)
 	respWriter := resp.NewWriter(conn)
@@ -24,8 +26,21 @@ func handleConnection(conn net.Conn, executor command.Executor) {
 			respWriter.Write(resp.NewError(err.Error()))
 			continue
 		}
-		result := executor.Execute(cmd, args)
+
+		s.WriteToAOF(cmd, value)
+
+		result := s.config.CmdExecutor.Execute(cmd, args)
 		respWriter.Write(result)
+	}
+}
+
+func (s *Server) WriteToAOF(cmd command.CommandType, value resp.Value) {
+	if s.config.Aof == nil {
+		return
+	}
+
+	if cmd == command.SET || cmd == command.SETEX || cmd == command.DEL {
+		s.config.Aof.Write(value)
 	}
 }
 
@@ -57,4 +72,34 @@ func parseRequest(value resp.Value) (command.CommandType, []resp.Value, error) {
 	args := value.ArrayVal[1:]
 
 	return cmd, args, nil
+}
+
+func (s *Server) loadAOF() error {
+	if s.config.Aof == nil {
+		return nil
+	}
+
+	log.Debug().Msg("Loading AOF")
+
+	s.config.Aof.Read(func(r io.Reader) {
+		respReader := resp.NewReader(r)
+		for {
+			value, err := respReader.Read()
+			if err != nil {
+				log.Debug().Msgf("Error reading from client: %s", err.Error())
+				return
+			}
+			cmd, args, err := parseRequest(value)
+			if err != nil {
+				log.Debug().Msgf("Error reading from client: %s", err.Error())
+				return
+			}
+
+			s.config.CmdExecutor.Execute(cmd, args)
+		}
+	})
+
+	log.Debug().Msg("AOF loaded")
+
+	return nil
 }

@@ -20,6 +20,7 @@ RESP is a simple, binary-safe protocol used by Redis for client-server communica
   - SETEX: Set the value and expiration of a key
   - DEL: Delete one or more keys
   - PING: Test if the server is responsive
+  - EXPIRE: Set the expiration time of a key
 
 ## Eviction Strategies
 
@@ -91,10 +92,15 @@ Usage:
   crapis [flags]
 
 Flags:
-  -b, --bind string   Bind address (default "0.0.0.0")
-  -d, --debug         Enable debug mode
-  -h, --help          help for crapis
-  -p, --port string   Port to listen on (default "6379")
+  -f, --aof string                 Path to AOF file (default "database.aof")
+  -a, --aof-enabled                Enable AOF
+  -b, --bind string                Bind address (default "0.0.0.0")
+  -d, --debug                      Enable debug mode
+  -i, --eviction-interval-ms int   Eviction interval in milliseconds (default 250)
+  -t, --eviction-timeout-ms int    Eviction timeout in milliseconds, must be at at most half of eviction-interval-ms (default 10)
+  -h, --help                       help for crapis
+  -e, --passive-eviction           Enable passive eviction (default true)
+  -p, --port string                Port to listen on (default "6379")
 ```
 
 For example, to run the server on a different port with debug mode enabled:
@@ -121,11 +127,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Build Redis from Scratch](https://www.build-redis-from-scratch.dev/) for the tutorial and inspiration.
 
-## Future Improvements
-
-- Implement more Redis commands
-- Add persistence options (AOF would be the simplest option)
-- Add support for more complex RESP data structures
-- Improve error handling and edge case coverage
-- Implement configurable eviction policies (e.g., LRU, LFU)
-- Add clustering and replication support

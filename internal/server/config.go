@@ -1,9 +1,11 @@
 package server
 
 import (
+	"net"
+
+	"github.com/marianozunino/crapis/internal/aof"
 	"github.com/marianozunino/crapis/internal/command"
 	"github.com/rs/zerolog/log"
-	"net"
 )
 
 type Config struct {
@@ -11,6 +13,7 @@ type Config struct {
 	Bind        string
 	ListenAddr  string
 	CmdExecutor command.Executor
+	Aof         *aof.Aof
 }
 
 type Option func(*Config)
@@ -32,6 +35,12 @@ func WithBind(bind string) Option {
 func WithCommandExecutor(executor command.Executor) Option {
 	return func(c *Config) {
 		c.CmdExecutor = executor
+	}
+}
+
+func WithAof(aof *aof.Aof) Option {
+	return func(c *Config) {
+		c.Aof = aof
 	}
 }
 

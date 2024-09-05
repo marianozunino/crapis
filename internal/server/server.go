@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/rs/zerolog/log"
 	"net"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -22,13 +23,17 @@ func (s *Server) Run() error {
 	}
 	defer l.Close()
 	s.config.ListenAddr = l.Addr().String()
-	log.Debug().Msgf("Server is listening on %s", s.config.ListenAddr)
+
+	s.loadAOF()
+
 	for {
 		conn, err := l.Accept()
+
 		if err != nil {
 			log.Error().Msgf("Error accepting connection: %v", err)
 			continue
 		}
-		go handleConnection(conn, s.config.CmdExecutor)
+
+		go s.handleConnection(conn)
 	}
 }
