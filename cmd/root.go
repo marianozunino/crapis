@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"os"
+	"time"
 
 	"github.com/marianozunino/crapis/internal/command"
 	"github.com/marianozunino/crapis/internal/logger"
@@ -33,7 +34,11 @@ import (
 
 var port string
 var bind string
+var passiveEvictionEnabled bool
 var debug bool
+
+var evictionIntervalMs int64
+var evictionTimeoutMs int64
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -42,7 +47,11 @@ var rootCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.ConfigureLogger(debug)
-		db := store.NewStore()
+		db := store.NewStore(
+			store.WithPassiveEviction(passiveEvictionEnabled),
+			store.WithEvictionInterval(time.Duration(evictionIntervalMs)*time.Millisecond),
+			store.WithEvictionTimeout(time.Duration(evictionTimeoutMs)*time.Millisecond),
+		)
 		executor := command.NewExecutor(db)
 		config := server.NewConfig(
 			server.WithPort(port),
@@ -64,4 +73,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&port, "port", "p", "6379", "Port to listen on")
 	rootCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
 	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
+	rootCmd.Flags().BoolVarP(&passiveEvictionEnabled, "passive-eviction", "e", true, "Enable passive eviction")
+
+	rootCmd.Flags().Int64VarP(&evictionIntervalMs, "eviction-interval-ms", "i", 250, "Eviction interval in milliseconds")
+	rootCmd.Flags().Int64VarP(&evictionTimeoutMs, "eviction-timeout-ms", "t", 10, "Eviction timeout in milliseconds, must be at at most half of eviction-interval-ms")
 }

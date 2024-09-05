@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,35 +16,38 @@ type data struct {
 
 type Store struct {
 	setMap  map[string]data
-	ttlKeys map[string]struct{} // NOTE: Saving 1 byte 🎉
+	ttlKeys map[string]struct{}
 	mu      sync.RWMutex
 
-	passiveEvictionEnabled bool
-	evectionIntervalMs     time.Duration
+	passiveEvictionEnabled atomic.Bool
+	evictionIntervalMs     time.Duration
 	evictionTimeoutMs      time.Duration
+	stopChan               chan struct{}
 }
 
 func NewStore(opts ...StoreOption) *Store {
 	s := &Store{
-		setMap:  make(map[string]data),
-		ttlKeys: make(map[string]struct{}),
-		mu:      sync.RWMutex{},
-
-		passiveEvictionEnabled: true,
-		evectionIntervalMs:     250 * time.Millisecond,
-		evictionTimeoutMs:      10 * time.Millisecond,
+		setMap:             make(map[string]data),
+		ttlKeys:            make(map[string]struct{}),
+		mu:                 sync.RWMutex{},
+		evictionIntervalMs: 250 * time.Millisecond,
+		evictionTimeoutMs:  10 * time.Millisecond,
+		stopChan:           make(chan struct{}),
 	}
+	s.passiveEvictionEnabled.Store(true)
 
 	for _, opt := range opts {
 		opt(s)
 	}
 
-	// evictionTimeoutMs must be at least half of evectionIntervalMs
-	if s.evictionTimeoutMs < s.evectionIntervalMs/2 {
-		s.evictionTimeoutMs = s.evectionIntervalMs / 2
+	// evictionTimeoutMs must be at most half of evictionIntervalMs
+	if s.evictionTimeoutMs > s.evictionIntervalMs/2 {
+		log.Debug().Msg("evictionTimeoutMs must be at most half of evictionIntervalMs")
+		s.evictionTimeoutMs = s.evictionIntervalMs / 2
+		log.Debug().Msgf("evictionTimeoutMs set to half of evictionIntervalMs (%s)", s.evictionTimeoutMs)
 	}
 
-	if s.passiveEvictionEnabled {
+	if s.passiveEvictionEnabled.Load() {
 		go s.startTTLExpirationThread()
 	}
 
@@ -51,24 +55,34 @@ func NewStore(opts ...StoreOption) *Store {
 }
 
 func (s *Store) startTTLExpirationThread() {
-	log.Debug().Msg("Starting TTL Expiration Thread")
-	// NOTE: run 4 times a second
-	ticker := time.NewTicker(s.evectionIntervalMs)
+	log.Debug().Msgf("Starting Eviction Worker (interval=%s, timeout=%s)", s.evictionIntervalMs, s.evictionTimeoutMs)
+	ticker := time.NewTicker(s.evictionIntervalMs)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		// NOTE: the job can only take 10ms to avoid blocking other operations
-		ctx, cancel := context.WithTimeout(context.Background(), s.evictionTimeoutMs)
-		evictedKeys, err := s.deleteExpiredKeys(ctx)
-		cancel()
+	for {
+		select {
+		case <-ticker.C:
+			// NOTE: the job can only take evictionTimeoutMs to avoid blocking other operations
+			ctx, cancel := context.WithTimeout(context.Background(), s.evictionTimeoutMs)
+			evictedKeys, err := s.deleteExpiredKeys(ctx)
+			cancel()
+			if err != nil {
+				log.Debug().Msgf("Error deleting keys: %v", err)
+				continue
+			}
+			if evictedKeys > 0 {
+				log.Debug().Msgf("Deleted %d expired keys", evictedKeys)
+			}
+		case <-s.stopChan:
+			log.Debug().Msgf("Stopping Eviction Worker")
+			return
+		}
+	}
+}
 
-		if err != nil {
-			log.Debug().Err(err).Msg("Error deleting keys")
-			continue
-		}
-		if evictedKeys > 0 {
-			log.Debug().Int("count", evictedKeys).Msg("Deleted expired keys")
-		}
+func (s *Store) Shutdown() {
+	if s.passiveEvictionEnabled.Load() {
+		close(s.stopChan)
 	}
 }
 
@@ -82,12 +96,12 @@ func (s *Store) deleteExpiredKeys(ctx context.Context) (int, error) {
 			return deletedKeys, ctx.Err()
 		default:
 			if v, exists := s.setMap[k]; exists && !v.ttl.IsZero() && v.ttl.Before(now) {
-				log.Debug().Str("key", k).Msg("Active Expiration")
 				s.mu.Lock()
 				delete(s.setMap, k)
 				delete(s.ttlKeys, k)
 				s.mu.Unlock()
 				deletedKeys++
+				log.Debug().Str("key", k).Msg("Active Expiration")
 			}
 		}
 	}
