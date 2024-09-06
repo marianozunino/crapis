@@ -14,7 +14,7 @@ func (e *executor) get(args []resp.Value) resp.Value {
 
 	log.Debug().Msgf("get command [%s]", *key)
 
-	val := e.db.ReadVal(*key)
+	val := e.db.ReadValue(*key)
 
 	if val == nil {
 		return resp.NewNull()

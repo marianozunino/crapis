@@ -24,7 +24,7 @@ func TestStore(t *testing.T) {
 				if tt.value != nil {
 					store.StoreValue(tt.key, *tt.value)
 				}
-				result := store.ReadVal(tt.key)
+				result := store.ReadValue(tt.key)
 				if !equalPtrString(result, tt.expected) {
 					t.Errorf("Expected %v, got %v", tt.expected, result)
 				}
@@ -50,7 +50,7 @@ func TestStore(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				store.StoreValueWithTTL(tt.key, tt.value, tt.ttl)
 				time.Sleep(tt.sleepBefore)
-				result := store.ReadVal(tt.key)
+				result := store.ReadValue(tt.key)
 				if !equalPtrString(result, tt.expected) {
 					t.Errorf("Expected %v, got %v", tt.expected, result)
 				}
@@ -92,19 +92,19 @@ func TestStore(t *testing.T) {
 					store.StoreValue(k, v)
 				}
 
-				count := store.DeleteKey(tt.keysToDelete...)
+				count := store.DeleteKeys(tt.keysToDelete...)
 				if count != tt.expectedCount {
 					t.Errorf("Expected %d deletions, got %d", tt.expectedCount, count)
 				}
 
 				for _, k := range tt.remainingKeys {
-					if store.ReadVal(k) == nil {
+					if store.ReadValue(k) == nil {
 						t.Errorf("Key %s should still exist", k)
 					}
 				}
 
 				for _, k := range tt.nonExistentKeys {
-					if store.ReadVal(k) != nil {
+					if store.ReadValue(k) != nil {
 						t.Errorf("Key %s should not exist", k)
 					}
 				}
@@ -120,13 +120,13 @@ func TestStore(t *testing.T) {
 		time.Sleep(1_250 * time.Millisecond)
 
 		// Check if the key has been removed
-		if store.ReadVal("key1") != nil {
+		if store.ReadValue("key1") != nil {
 			t.Errorf("Key 'key1' should have been removed due to TTL expiration")
 		}
 	})
 
 	t.Run("deleteExpiredKeys", func(t *testing.T) {
-		store := NewStore(WithPassiveEvictionEnabled(false))
+		store := NewStore(WithPassiveEviction(false))
 
 		store.StoreValueWithTTL("key1", "value1", 1) // 1 second TTL
 		store.StoreValueWithTTL("key2", "value2", 2) // 3 seconds TTL
@@ -147,13 +147,13 @@ func TestStore(t *testing.T) {
 		}
 
 		// Check remaining keys
-		if store.ReadVal("key1") != nil {
+		if store.ReadValue("key1") != nil {
 			t.Errorf("Key 'key1' should have been deleted")
 		}
-		if store.ReadVal("key2") == nil {
+		if store.ReadValue("key2") == nil {
 			t.Errorf("Key 'key2' should still exist")
 		}
-		if store.ReadVal("key3") == nil {
+		if store.ReadValue("key3") == nil {
 			t.Errorf("Key 'key3' should still exist")
 		}
 	})

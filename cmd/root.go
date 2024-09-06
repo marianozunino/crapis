@@ -22,80 +22,107 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/marianozunino/crapis/internal/aof"
 	"github.com/marianozunino/crapis/internal/command"
 	"github.com/marianozunino/crapis/internal/logger"
 	"github.com/marianozunino/crapis/internal/server"
 	"github.com/marianozunino/crapis/internal/store"
 	"github.com/rs/zerolog/log"
-
 	"github.com/spf13/cobra"
 )
 
-var port string
-var bind string
-var passiveEvictionEnabled bool
-var debug bool
+type config struct {
+	port                   string
+	bind                   string
+	debug                  bool
+	passiveEvictionEnabled bool
+	evictionInterval       time.Duration
+	evictionTimeout        time.Duration
+	aofEnabled             bool
+	aofPath                string
+}
 
-var evictionIntervalMs int64
-var evictionTimeoutMs int64
+func newRootCmd() *cobra.Command {
+	cfg := &config{}
 
-var aofEnabled bool
-var aofPath string
+	rootCmd := &cobra.Command{
+		Use:   "crapis",
+		Short: "Spawns a Redis-like server",
+		Long:  `CRAPIs is a lightweight, Redis-like server implementation.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			run(cfg)
+		},
+	}
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "crapis",
-	Short: "Spawns a redis like server",
-	Long:  ``,
-	Run: func(cmd *cobra.Command, args []string) {
-		logger.ConfigureLogger(debug)
-		var dbFile *aof.Aof
-		var err error
+	rootCmd.Flags().StringVarP(&cfg.port, "port", "p", "6379", "Port to listen on")
+	rootCmd.Flags().StringVarP(&cfg.bind, "bind", "b", "0.0.0.0", "Bind address")
+	rootCmd.Flags().BoolVarP(&cfg.debug, "debug", "d", false, "Enable debug mode")
+	rootCmd.Flags().BoolVarP(&cfg.passiveEvictionEnabled, "passive-eviction", "e", true, "Enable passive eviction")
+	rootCmd.Flags().DurationVarP(&cfg.evictionInterval, "eviction-interval", "i", 250*time.Millisecond, "Eviction interval")
+	rootCmd.Flags().DurationVarP(&cfg.evictionTimeout, "eviction-timeout", "t", 10*time.Millisecond, "Eviction timeout (must be at most half of eviction-interval)")
+	rootCmd.Flags().BoolVarP(&cfg.aofEnabled, "aof-enabled", "a", true, "Enable AOF")
+	rootCmd.Flags().StringVarP(&cfg.aofPath, "aof", "f", "database.aof", "Path to AOF file")
 
-		if aofEnabled {
-			spew.Dump(aofPath)
-			if dbFile, err = aof.NewAof(aofPath); err != nil {
-				log.Error().Msgf("Error creating AOF: %v", err)
-				os.Exit(1)
-			}
-		}
-		db := store.NewStore(
-			store.WithPassiveEviction(passiveEvictionEnabled),
-			store.WithEvictionInterval(time.Duration(evictionIntervalMs)*time.Millisecond),
-			store.WithEvictionTimeout(time.Duration(evictionTimeoutMs)*time.Millisecond),
-		)
-		executor := command.NewExecutor(db)
-		config := server.NewConfig(
-			server.WithPort(port),
-			server.WithBind(bind),
-			server.WithCommandExecutor(executor),
-			server.WithAof(dbFile),
-		)
-		server.NewServer(config).Run()
-	},
+	return rootCmd
 }
 
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	rootCmd := newRootCmd()
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func init() {
-	rootCmd.Flags().StringVarP(&port, "port", "p", "6379", "Port to listen on")
-	rootCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
-	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
-	rootCmd.Flags().BoolVarP(&passiveEvictionEnabled, "passive-eviction", "e", true, "Enable passive eviction")
+func run(cfg *config) error {
+	if err := validateConfig(cfg); err != nil {
+		return err
+	}
 
-	rootCmd.Flags().Int64VarP(&evictionIntervalMs, "eviction-interval-ms", "i", 250, "Eviction interval in milliseconds")
-	rootCmd.Flags().Int64VarP(&evictionTimeoutMs, "eviction-timeout-ms", "t", 10, "Eviction timeout in milliseconds, must be at at most half of eviction-interval-ms")
+	logger.ConfigureLogger(cfg.debug)
 
-	rootCmd.Flags().BoolVarP(&aofEnabled, "aof-enabled", "a", false, "Enable AOF")
-	rootCmd.Flags().StringVarP(&aofPath, "aof", "f", "database.aof", "Path to AOF file")
+	db := setupStore(cfg)
+	executor := command.NewExecutor(db)
+	srv := setupServer(cfg, executor)
+
+	log.Info().Msg("Starting server...")
+	return srv.Run()
+}
+
+func validateConfig(cfg *config) error {
+	if cfg.evictionTimeout > cfg.evictionInterval/2 {
+		return fmt.Errorf("eviction timeout must be at most half of eviction interval")
+	}
+	return nil
+}
+
+func setupStore(cfg *config) *store.Store {
+	return store.NewStore(
+		store.WithPassiveEviction(cfg.passiveEvictionEnabled),
+		store.WithEvictionInterval(cfg.evictionInterval),
+		store.WithEvictionTimeout(cfg.evictionTimeout),
+	)
+}
+
+func setupServer(cfg *config, executor command.Executor) *server.Server {
+	var dbFile *aof.Aof
+	var err error
+
+	if cfg.aofEnabled {
+		dbFile, err = aof.NewAof(cfg.aofPath)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error creating AOF")
+		}
+	}
+
+	return server.NewServer(
+		server.WithPort(cfg.port),
+		server.WithBind(cfg.bind),
+		server.WithCommandExecutor(executor),
+		server.WithAof(dbFile),
+	)
 }

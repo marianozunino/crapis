@@ -12,6 +12,6 @@ func (e *executor) del(args []resp.Value) resp.Value {
 	for i, arg := range args {
 		keys[i] = *arg.BulkVal
 	}
-	deletedKeys := e.db.DeleteKey(keys...)
+	deletedKeys := e.db.DeleteKeys(keys...)
 	return resp.NewInteger(deletedKeys)
 }

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/marianozunino/crapis/internal/resp"
 )
 
@@ -18,7 +17,6 @@ type Aof struct {
 }
 
 func NewAof(path string) (*Aof, error) {
-	spew.Dump(path)
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0666)
 
 	if err != nil {
@@ -67,8 +65,8 @@ func (aof *Aof) Write(value resp.Value) error {
 	return nil
 }
 
-func (aof *Aof) Read(f func(io.Reader)) {
+func (aof *Aof) Read(f func(io.Reader) error) error {
 	aof.mu.Lock()
 	defer aof.mu.Unlock()
-	f(aof.rd)
+	return f(aof.rd)
 }

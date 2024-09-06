@@ -44,7 +44,7 @@ func WithAof(aof *aof.Aof) Option {
 	}
 }
 
-func NewConfig(opts ...Option) *Config {
+func newConfig(opts ...Option) *Config {
 	c := &Config{
 		Port: "6379",
 		Bind: "0.0.0.0",

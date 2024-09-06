@@ -8,8 +8,8 @@ type Writer struct {
 	writer io.Writer
 }
 
-func NewWriter(w io.Writer) *Writer {
-	return &Writer{writer: w}
+func NewWriter(w io.Writer) Writer {
+	return Writer{writer: w}
 }
 
 func (w *Writer) Write(v Value) error {

@@ -115,7 +115,7 @@ func (s *Store) StoreValue(key, val string) {
 	delete(s.ttlKeys, key) // Remove from TTL registry if it was there
 }
 
-func (s *Store) ReadVal(key string) *string {
+func (s *Store) ReadValue(key string) *string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if val, ok := s.setMap[key]; ok {
@@ -136,7 +136,7 @@ func (s *Store) StoreValueWithTTL(key, val string, ttl int64) {
 	s.ttlKeys[key] = struct{}{} // Add to TTL registry
 }
 
-func (s *Store) DeleteKey(keys ...string) int {
+func (s *Store) DeleteKeys(keys ...string) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	deletedKeys := 0
