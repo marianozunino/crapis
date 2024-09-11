@@ -3,7 +3,6 @@ package resp
 func (r *Reader) readLine() (line []byte, n int, err error) {
 	for {
 		b, err := r.reader.ReadByte()
-
 		if err != nil {
 			return nil, 0, err
 		}

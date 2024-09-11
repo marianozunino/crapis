@@ -13,7 +13,7 @@ func TestReader_Marshal(t *testing.T) {
 	}{
 		{
 			name:  "Marshal String",
-			input: NewBulk(stringPtr("hello")),
+			input: NewString("hello"),
 			want:  []byte("+hello\r\n"),
 		},
 
@@ -63,5 +63,4 @@ func TestReader_Marshal(t *testing.T) {
 			}
 		})
 	}
-
 }

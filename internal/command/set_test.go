@@ -47,7 +47,6 @@ func Test_set(t *testing.T) {
 		}
 		e.handlers[SET] = e.set
 		t.Run(tt.name, func(t *testing.T) {
-
 			if got := e.Execute(SET, tt.args.args); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("set() = %v, want %v", got, tt.want)
 			}

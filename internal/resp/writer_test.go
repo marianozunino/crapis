@@ -9,6 +9,7 @@ import (
 )
 
 func TestNewWriter(t *testing.T) {
+	w := &bytes.Buffer{}
 	tests := []struct {
 		name  string
 		want  *Writer
@@ -16,14 +17,13 @@ func TestNewWriter(t *testing.T) {
 	}{
 		{
 			name:  "Create new Writer",
-			want:  &Writer{writer: &bytes.Buffer{}},
+			want:  &Writer{writer: w},
 			wantW: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := &bytes.Buffer{}
-			if got := NewWriter(w); !reflect.DeepEqual(got, tt.want) {
+			if got := NewWriter(w); !reflect.DeepEqual(&got, tt.want) {
 				t.Errorf("NewWriter() = %v, want %v", got, tt.want)
 			}
 			if gotW := w.String(); gotW != tt.wantW {

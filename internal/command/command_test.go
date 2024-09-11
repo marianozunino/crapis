@@ -45,7 +45,6 @@ func TestParseCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			got, err := ParseCommand(tt.args.in)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseCommand() error = %v, wantErr %v", err, tt.wantErr)
@@ -54,7 +53,6 @@ func TestParseCommand(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("ParseCommand() got = %v, want %v", got, tt.want)
 			}
-
 		})
 	}
 }

@@ -88,7 +88,6 @@ func (v Value) marshallNull() []byte {
 // marshallError returns the Redis protocol representation of an error message
 // Example: "-Error message\r\n"
 func (v Value) marshallError() []byte {
-
 	var bytes []byte
 	bytes = append(bytes, byte(ERROR))
 	bytes = append(bytes, v.StrVal...)

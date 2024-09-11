@@ -20,7 +20,6 @@ func (r *Reader) readArray() (Value, error) {
 
 	for i := 0; i < size; i++ {
 		val, err := r.Read()
-
 		if err != nil {
 			return v, err
 		}

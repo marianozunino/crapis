@@ -1,9 +1,10 @@
 package command
 
 import (
+	"strconv"
+
 	"github.com/marianozunino/crapis/internal/resp"
 	"github.com/rs/zerolog/log"
-	"strconv"
 )
 
 func (e *executor) setex(args []resp.Value) resp.Value {

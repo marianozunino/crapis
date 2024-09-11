@@ -46,7 +46,6 @@ func Test_ping(t *testing.T) {
 		e.handlers[PING] = e.ping
 
 		t.Run(tt.name, func(t *testing.T) {
-
 			if got := e.Execute(PING, tt.args.args); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ping() = %v, want %v", got, tt.want)
 			}

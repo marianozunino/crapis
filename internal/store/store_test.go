@@ -137,7 +137,6 @@ func TestStore(t *testing.T) {
 
 		ctx := context.Background()
 		deletedKeys, err := store.deleteExpiredKeys(ctx)
-
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}

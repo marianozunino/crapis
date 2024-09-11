@@ -36,7 +36,7 @@ func TestParseRequest(t *testing.T) {
 		},
 		{
 			name:         "Bulk arg has no value",
-			value:        resp.NewArray(resp.NewBulk(nil)),
+			value:        resp.NewArray(),
 			expectedArgs: []resp.Value{},
 			expectedErr:  true,
 		},

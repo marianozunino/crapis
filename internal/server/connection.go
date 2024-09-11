@@ -119,4 +119,3 @@ func (s *Server) loadAOF() error {
 	log.Debug().Msg("AOF loaded")
 	return nil
 }
-

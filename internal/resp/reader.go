@@ -20,7 +20,6 @@ func NewReader(rd io.Reader) Reader {
 
 func (r *Reader) Read() (Value, error) {
 	kind, err := r.reader.ReadByte()
-
 	if err != nil {
 		return Value{}, err
 	}
